@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "2026.11.01",
+  "apps": [
+    {
+      "package": "com.flyme.auto.keyserver",
+      "type": "patch",
+      "name": "KeyServer",
+      "summary": "Vá để map phím vô lăng GELLY/MODE thành 6 cử chỉ (single/double/long)",
+      "descriptionUrl": "https://github.com/g-e-n-v/coon-market/blob/main/apps/com.flyme.auto.keyserver/README.md",
+      "factory": {
+        "versionCode": 26020313,
+        "sha256": "5dd6217da9bb472364dcd60f00b99f7ba4ca9a6421167690f5e9a226f6ffab51",
+        "systemApkPath": "/system/app/GeelyAutoKeyServer/GeelyAutoKeyServer.apk",
+        "apk": {
+          "url": "https://github.com/g-e-n-v/coon-market/releases/download/market-2026.11.01/GeelyAutoKeyServer.factory-26020313.apk",
+          "sha256": "5dd6217da9bb472364dcd60f00b99f7ba4ca9a6421167690f5e9a226f6ffab51",
+          "sizeBytes": 12761386
+        },
+        "source": "coolray-lab extracts/factory-apks/GeelyAutoKeyServer.apk"
+      },
+      "releases": [
+        {
+          "versionCode": 26020313,
+          "versionName": "patch-1",
+          "releasedAt": "2026-11-01",
+          "minCoonVersionCode": 2,
+          "apk": {
+            "url": "https://github.com/g-e-n-v/coon-market/releases/download/market-2026.11.01/GeelyAutoKeyServer.patch-1.26020313.apk",
+            "sha256": "bf73010e50529163d66365d2a9de4407095b6e6f0055293f30a7d124b98c6e8c",
+            "sizeBytes": 12766380
+          },
+          "postInstall": [
+            {
+              "action": "start-service",
+              "target": "com.flyme.auto.keyserver/.service.AutoKeyService"
+            }
+          ],
+          "notes": [
+            "Bản vá đầu tiên, đã test trên xe thật 2026-11-01 (đủ 6 cử chỉ GELLY/MODE × single/double/long).",
+            "versionCode giữ nguyên 26020313 như factory: digest APK là mốc nhận diện bản vá. Từ patch-2 bump versionCode = factory + 1.000.000 + n."
+          ]
+        }
+      ]
+    }
+  ]
+}
