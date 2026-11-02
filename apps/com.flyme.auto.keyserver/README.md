@@ -2,7 +2,9 @@
 
 KeyServer (`com.flyme.auto.keyserver`, system app uid 1000 của HU) là app nhận
 key event thật từ MCU qua VHAL rồi dispatch tới `HomeKeyHandler` /
-`ModeKeyHandler`. Bản vá **không đổi hành vi gốc** — chỉ chèn một bước forward:
+`ModeKeyHandler`. Tên hiển thị gốc trên HU: **AutoKeyServer** (label trong
+AndroidManifest) — field `name` của catalog dùng đúng tên này. Bản vá
+**không đổi hành vi gốc** — chỉ chèn một bước forward:
 mỗi event GELLY (Home) / MODE được phát đi ordered broadcast
 `vn.coon.intent.action.HARD_KEY_EVENT` (extras `key` = home|mode, `state` =
 1|2|3) tới `vn.coon.app` (Coon). Nếu Coon không nhận (không cài, bị

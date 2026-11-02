@@ -64,6 +64,12 @@ h = sha256(APK đang active)
 
 ## Quy ước quan trọng
 
+- **`name` của app patch = tên gốc của app trên HU** (application label trong
+  AndroidManifest, vd `AutoKeyServer`, không phải tên file APK hay tên tự đặt):
+  người dùng thấy Market thay đúng app đang chạy trên xe. Lấy tên gốc từ xe qua
+  ADB: pull APK theo `factory.systemApkPath` rồi
+  `aapt2 dump badging <apk> | grep application-label`. App sideload (`type: app`)
+  dùng tên hiển thị chính thức của app đó.
 - **versionCode bản vá**: `factory + 1.000.000 + n` từ patch-2 (patch-1 giữ
   nguyên 26020313 — ngoại lệ được ghi chú, digest là mốc nhận diện).
 - **sha256 là mốc nhận diện tuyệt đối** — chữ ký bản vá trùng platform
