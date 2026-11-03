@@ -6,10 +6,8 @@
       "package": "com.flyme.auto.keyserver",
       "type": "patch",
       "name": "AutoKeyServer",
-      "summary": "Map phím vô lăng GELLY/MODE thành 6 cử chỉ (single/double/long)",
-      "description": "AutoKeyServer là app hệ thống nhận phím vô lăng từ MCU qua VHAL. Bản vá phát event GELLY (Home) và MODE sang Coon dưới dạng ordered broadcast; Coon nhận thì toàn quyền map cử chỉ, Coon không nhận (chưa cài/force-stop) thì phím chạy đúng hành vi gốc của xe.",
+      "summary": "Map phím vô lăng GELLY/MODE thành 6 cử chỉ single/double/long — bản vá forward event sang Coon qua ordered broadcast; Coon không nhận (chưa cài/force-stop) thì phím chạy đúng hành vi gốc của xe.",
       "icon": "https://raw.githubusercontent.com/g-e-n-v/coon-market/main/icons/com.flyme.auto.keyserver.webp",
-      "featureHint": "Cập nhật để map phím GELLY/MODE thành 6 cử chỉ trong tab Phím xe của Coon.",
       "rollbackNote": "Bản vá ngừng hoạt động, phím GELLY/MODE trở về hành vi gốc của xe.",
       "factory": {
         "versionCode": 26020313,

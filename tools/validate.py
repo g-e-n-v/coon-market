@@ -3,7 +3,7 @@
 
 Chỉ dùng stdlib. Kiểm tra:
   1. Cấu trúc: field bắt buộc, pattern (sha256, package, url, date, component,
-     icon), string optional (description, featureHint, rollbackNote).
+     icon), string optional (rollbackNote).
   2. Nghiệp vụ: package duy nhất, versionCode release duy nhất trong app,
      release không được nhỏ hơn factory.versionCode, postInstall hợp lệ,
      factory bắt buộc với type=patch.
@@ -283,10 +283,10 @@ def main():
             kind = None
         require_str(app, "name", path)
         require_str(app, "summary", path)
-        for key in ("description", "featureHint", "rollbackNote"):
+        for key in ("rollbackNote",):
             optional_str(app, key, path)
         if "descriptionUrl" in app:
-            err(f"{path}.descriptionUrl: đã bỏ ở schema v2 — dùng description (HU không có browser)")
+            err(f"{path}.descriptionUrl: đã bỏ ở schema v2 — nội dung mô tả nằm trong summary")
         icon = require_str(app, "icon", path, pattern=ICON_URL_RE) if "icon" in app else None
         if icon:
             icon_urls.append((icon, f"{path}.icon"))

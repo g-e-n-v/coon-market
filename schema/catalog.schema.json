@@ -38,19 +38,11 @@
           "description": "patch = thay thế system app để mở khóa tính năng Coon (install = update, rollback = về bản trong /system). app = APK gợi ý cài thêm (install/uninstall/cập nhật bình thường)."
         },
         "name": { "type": "string", "minLength": 1, "description": "Tên hiển thị trong UI Market. Với type=patch phải dùng đúng application label gốc của app trên HU." },
-        "summary": { "type": "string", "minLength": 1, "description": "Mô tả một dòng." },
-        "description": {
-          "type": "string",
-          "description": "Mô tả vài dòng hiển thị trực tiếp trong Coon (HU không có browser — không dùng link)."
-        },
+        "summary": { "type": "string", "minLength": 1, "description": "Mô tả hiển thị trong Coon (head card lẫn chi tiết) — duy nhất, gộp cả nội dung ngắn lẫn dài (HU không có browser — không dùng link)." },
         "icon": {
           "type": "string",
           "pattern": "^https://raw\\.githubusercontent\\.com/g-e-n-v/coon-market/main/icons/[^/]+$",
           "description": "Icon hiển thị (PNG/WebP trong icons/ của repo, khuyến nghị 192px). Coon cache; thiếu/lỗi thì fallback chữ cái đầu."
-        },
-        "featureHint": {
-          "type": "string",
-          "description": "Câu mô tả lợi ích khi ở trạng thái Factory/Outdated — override hint generic của Coon (nội dung đặc thù app, vd 'map phím vô lăng')."
         },
         "rollbackNote": {
           "type": "string",
