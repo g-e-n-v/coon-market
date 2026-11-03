@@ -1,13 +1,16 @@
 {
-  "schemaVersion": 1,
-  "catalogVersion": "2026.11.02",
+  "schemaVersion": 2,
+  "catalogVersion": "2026.11.03",
   "apps": [
     {
       "package": "com.flyme.auto.keyserver",
       "type": "patch",
       "name": "AutoKeyServer",
-      "summary": "Vá để map phím vô lăng GELLY/MODE thành 6 cử chỉ (single/double/long)",
-      "descriptionUrl": "https://github.com/g-e-n-v/coon-market/blob/main/apps/com.flyme.auto.keyserver/README.md",
+      "summary": "Map phím vô lăng GELLY/MODE thành 6 cử chỉ (single/double/long)",
+      "description": "AutoKeyServer là app hệ thống nhận phím vô lăng từ MCU qua VHAL. Bản vá phát event GELLY (Home) và MODE sang Coon dưới dạng ordered broadcast; Coon nhận thì toàn quyền map cử chỉ, Coon không nhận (chưa cài/force-stop) thì phím chạy đúng hành vi gốc của xe.",
+      "icon": "https://raw.githubusercontent.com/g-e-n-v/coon-market/main/icons/com.flyme.auto.keyserver.webp",
+      "featureHint": "Cập nhật để map phím GELLY/MODE thành 6 cử chỉ trong tab Phím xe của Coon.",
+      "rollbackNote": "Bản vá ngừng hoạt động, phím GELLY/MODE trở về hành vi gốc của xe.",
       "factory": {
         "versionCode": 26020313,
         "sha256": "5dd6217da9bb472364dcd60f00b99f7ba4ca9a6421167690f5e9a226f6ffab51",
@@ -21,13 +24,12 @@
       },
       "releases": [
         {
-          "versionCode": 26020313,
-          "versionName": "patch-1",
-          "releasedAt": "2026-11-01",
-          "minCoonVersionCode": 2,
+          "versionCode": 27020314,
+          "releasedAt": "2026-11-03",
+          "minCoonVersionCode": 3,
           "apk": {
-            "url": "https://github.com/g-e-n-v/coon-market/releases/download/market-2026.11.01/GeelyAutoKeyServer.patch-1.26020313.apk",
-            "sha256": "bf73010e50529163d66365d2a9de4407095b6e6f0055293f30a7d124b98c6e8c",
+            "url": "https://github.com/g-e-n-v/coon-market/releases/download/market-2026.11.03/GeelyAutoKeyServer.patch-2.27020314.apk",
+            "sha256": "5c69bf058b697a64a48e8b690464e0acb5739c725c361362eb6f837435864712",
             "sizeBytes": 12766380
           },
           "postInstall": [
@@ -37,8 +39,8 @@
             }
           ],
           "notes": [
-            "Bản vá đầu tiên, đã test trên xe thật 2026-11-01 (đủ 6 cử chỉ GELLY/MODE × single/double/long).",
-            "versionCode giữ nguyên 26020313 như factory: digest APK là mốc nhận diện bản vá. Từ patch-2 bump versionCode = factory + 1.000.000 + n."
+            "Nội dung smali giống bản đã test trên xe 2026-11-01 (đủ 6 cử chỉ GELLY/MODE × single/double/long).",
+            "versionCode bump lên 27020314 theo quy ước factory + 1.000.000 + n — release đầu tiên cài qua Coon Market (PackageInstaller, APK nằm /data/app)."
           ]
         }
       ]

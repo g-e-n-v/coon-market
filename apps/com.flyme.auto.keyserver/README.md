@@ -26,7 +26,7 @@ nhận diện bằng sha256 của APK đang active:
 
 | Trạng thái | Ý nghĩa |
 | --- | --- |
-| `FACTORY` | versionCode = 26020313 và sha256 = `5dd6217d…` (bản gốc) → nút "Vá" |
+| `FACTORY` | versionCode = 26020313 và sha256 = `5dd6217d…` (bản gốc) → nút "Cập nhật" |
 | `PATCHED_OK` | sha256 khớp release mới nhất trong catalog |
 | `PATCHED_OUTDATED` | sha256 khớp release cũ → nút "Cập nhật" |
 | `UNKNOWN_UPDATE` | có update lạ Coon không biết — cảnh báo, không tự thay |
@@ -34,15 +34,18 @@ nhận diện bằng sha256 của APK đang active:
 
 ## Releases
 
-| Release | versionCode | sha256 | Ghi chú |
+| releasedAt | versionCode | sha256 | Ghi chú |
 | --- | --- | --- | --- |
-| patch-1 | 26020313 (bằng factory) | `bf73010e50529163d66365d2a9de4407095b6e6f0055293f30a7d124b98c6e8c` | Đã test trên xe thật 2026-11-01: đủ 6 cử chỉ GELLY/MODE × single/double/long. Digest là mốc nhận diện vì versionCode chưa bump. |
+| 2026-11-03 | 27020314 (factory + 1.000.000 + 1) | `5c69bf058b697a64a48e8b690464e0acb5739c725c361362eb6f837435864712` | Release đầu tiên cài qua Coon Market (PackageInstaller, APK nằm /data/app). Nội dung smali giống bản test trên xe thật 2026-11-01 (đủ 6 cử chỉ GELLY/MODE × single/double/long), chỉ bump versionCode. |
+
+Lịch sử: bản test 2026-11-01 (sha256 `bf73010e…`, versionCode bằng factory) chỉ
+đã flash trực tiếp vào /system qua OTA/ADB — không nằm trong catalog.
 
 ## Sau khi cài (postInstall)
 
-`pm install -r` khiến PMS kill process KeyServer ngay; service chỉ được đánh
-thức bởi broadcast boot `com.geely.action.BOOT_KET_SERVICE_APP`. Coon phải tự
-start lại:
+Install qua PackageInstaller khiến PMS kill process KeyServer ngay; service chỉ
+được đánh thức bởi broadcast boot `com.geely.action.BOOT_KET_SERVICE_APP`.
+Coon phải tự start lại:
 
 ```
 am start-foreground-service -n com.flyme.auto.keyserver/.service.AutoKeyService
@@ -52,12 +55,12 @@ am start-foreground-service -n com.flyme.auto.keyserver/.service.AutoKeyService
 
 ## Rollback
 
-- Vá qua Coon (`pm install -r`, update nằm `/data/app`): bản gốc còn nguyên
-  trong `/system` — Coon backup ra `/sdcard` trước khi vá lần đầu, rollback =
-  `pm install -r` lại bản backup.
-- Vá qua USB OTA (APK vá nằm trong `/system`): trên xe không còn bản gốc —
-  tải `factory.apk` từ catalog rồi `pm install -r` (cùng versionCode nên
-  không cần `-d`).
+- Cài qua Coon (update nằm `/data/app`, versionCode bump): bản gốc còn nguyên
+  trong `/system` — rollback = uninstall update (PMS tự lộ lại bản gốc).
+  Coon cũng backup bản gốc vào filesDir + `/sdcard` trước khi vá lần đầu.
+- TH đặc biệt versionCode bằng factory (cài đè cùng mã): Coon cài lại
+  backup; không có thì tải `factory.apk` từ catalog (cùng versionCode nên
+  không cần downgrade).
 
 ## Rủi ro
 

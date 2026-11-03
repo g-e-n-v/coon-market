@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-"""Validate catalog/coon-market.json cho repo coon-market.
+"""Validate catalog/coon-market.json cho repo coon-market (schema v2).
 
 Chỉ dùng stdlib. Kiểm tra:
-  1. Cấu trúc: field bắt buộc, pattern (sha256, package, url, date, component).
+  1. Cấu trúc: field bắt buộc, pattern (sha256, package, url, date, component,
+     icon), string optional (description, featureHint, rollbackNote).
   2. Nghiệp vụ: package duy nhất, versionCode release duy nhất trong app,
-     release không được nhỏ hơn factory.versionCode (bằng = WARN, ngoại lệ có ghi chú),
-     postInstall hợp lệ, factory bắt buộc với type=patch.
+     release không được nhỏ hơn factory.versionCode, postInstall hợp lệ,
+     factory bắt buộc với type=patch.
   3. Tích hợp GitHub: mọi url apk phải là asset thật của release (query API,
-     so khớp tên + sizeBytes + digest sha256 nếu API trả về).
+     so khớp tên + sizeBytes + digest sha256 nếu API trả về); icon URL phải
+     resolve 200. Repo public — token không bắt buộc (dùng được để tránh rate
+     limit).
 
 Exit code 0 = PASS (cho phép WARN), khác 0 = có ERROR.
-
-Token: đọc env COON_MARKET_TOKEN hoặc GITHUB_TOKEN (repo private cần token;
-thiếu token thì bỏ qua bước 3 với WARN).
 """
+
 import json
 import os
 import re
@@ -22,13 +23,14 @@ import urllib.request
 import urllib.error
 
 CATALOG_PATH = os.path.join(os.path.dirname(__file__), "..", "catalog", "coon-market.json")
-SUPPORTED_SCHEMA_VERSION = 1
+SUPPORTED_SCHEMA_VERSION = 2
 
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 PKG_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 CATALOG_VERSION_RE = re.compile(r"^\d{4}\.\d{2}\.\d{2}$")
 RELEASE_URL_RE = re.compile(r"^https://github\.com/([^/]+)/([^/]+)/releases/download/([^/]+)/([^/]+)$")
+ICON_URL_RE = re.compile(r"^https://raw\.githubusercontent\.com/([^/]+)/([^/]+)/([^/]+)/icons/([^/]+)$")
 COMPONENT_RE = re.compile(
     r"^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)*"
     r"(/\.?[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)*)?$"
@@ -56,6 +58,13 @@ def require_str(obj, key, path, pattern=None, label=None):
         err(f"{path}.{key}: giá trị {value!r} không khớp pattern")
         return None
     return value
+
+
+def optional_str(obj, key, path):
+    if key not in obj:
+        return
+    if not isinstance(obj.get(key), str) or not obj.get(key):
+        err(f"{path}.{key}: nếu có phải là string không rỗng")
 
 
 def require_int(obj, key, path, minimum=None):
@@ -106,7 +115,6 @@ def check_release(release, path, seen_version_codes, factory_version_code):
         err(f"{path}: phải là object")
         return
     vc = require_int(release, "versionCode", path, minimum=1)
-    require_str(release, "versionName", path)
     require_str(release, "releasedAt", path, pattern=DATE_RE)
     min_coon = release.get("minCoonVersionCode", 1)
     if not isinstance(min_coon, int) or isinstance(min_coon, bool) or min_coon < 1:
@@ -115,11 +123,18 @@ def check_release(release, path, seen_version_codes, factory_version_code):
         if vc in seen_version_codes:
             err(f"{path}.versionCode {vc} trùng với release khác trong cùng app")
         seen_version_codes.add(vc)
-        if factory_version_code is not None:
-            if vc < factory_version_code:
-                err(f"{path}.versionCode {vc} < factory.versionCode {factory_version_code} (pm install sẽ cần -d)")
-            elif vc == factory_version_code:
-                warn(f"{path}.versionCode {vc} bằng factory.versionCode — digest là mốc nhận diện; ghi chú trong notes")
+        if factory_version_code is not None and vc < factory_version_code:
+            err(
+                f"{path}.versionCode {vc} < factory.versionCode {factory_version_code} "
+                "(install sẽ cần downgrade)"
+            )
+        if factory_version_code is not None and vc == factory_version_code:
+            warn(
+                f"{path}.versionCode {vc} bằng factory.versionCode — digest là mốc nhận diện; "
+                "nên bump theo quy ước factory + 1.000.000 + n"
+            )
+    if "versionName" in release:
+        err(f"{path}.versionName: đã bỏ ở schema v2 — định danh hiển thị là releasedAt")
     artifact = check_apk_artifact(release.get("apk"), f"{path}.apk")
     if "notes" in release and not isinstance(release.get("notes"), list):
         err(f"{path}.notes: phải là mảng string")
@@ -145,22 +160,35 @@ def check_factory(factory, path):
 
 def github_api(path, token):
     url = f"https://api.github.com{path}"
-    request = urllib.request.Request(url, headers={
+    headers = {
         "Accept": "application/vnd.github+json",
         "User-Agent": "coon-market-validate",
-    })
+    }
     if token:
-        request.add_header("Authorization", f"Bearer {token}")
+        headers["Authorization"] = f"Bearer {token}"
+    request = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(request, timeout=30) as response:
         return json.loads(response.read().decode("utf-8"))
 
 
-def check_urls_online(artifacts):
-    """artifacts: list (url, sha256, sizeBytes, context-path). Group theo tag để gọi API 1 lần."""
+def check_url_ok(url, context):
+    """HEAD/GET kiểm tra URL public resolve được (icon raw URL)."""
+    request = urllib.request.Request(url, method="HEAD", headers={
+        "User-Agent": "coon-market-validate",
+    })
+    try:
+        with urllib.request.urlopen(request, timeout=15) as response:
+            if response.status != 200:
+                err(f"{context}: HTTP {response.status} khi tải {url}")
+    except urllib.error.HTTPError as exc:
+        err(f"{context}: HTTP {exc.code} khi tải {url} — file không tồn tại trên repo?")
+    except (urllib.error.URLError, TimeoutError) as exc:
+        warn(f"{context}: lỗi mạng {exc} — bỏ qua")
+
+
+def check_urls_online(artifacts, icon_urls):
+    """artifacts: list (url, sha256, sizeBytes, context). Group theo tag để gọi API 1 lần."""
     token = os.environ.get("COON_MARKET_TOKEN") or os.environ.get("GITHUB_TOKEN")
-    if not token:
-        warn("Thiếu COON_MARKET_TOKEN/GITHUB_TOKEN — bỏ qua kiểm tra asset tồn tại trên GitHub")
-        return
     by_tag = {}
     for url, sha, size, context in artifacts:
         match = RELEASE_URL_RE.match(url)
@@ -191,6 +219,8 @@ def check_urls_online(artifacts):
                     err(f"{context}: sha256 catalog {sha} ≠ digest asset {actual}")
             else:
                 warn(f"{context}: GitHub API không trả digest cho asset {asset_name!r} — chỉ check tên + size")
+    for url, context in icon_urls:
+        check_url_ok(url, context)
 
 
 def main():
@@ -202,6 +232,7 @@ def main():
         return 1
 
     artifacts = []
+    icon_urls = []
 
     if catalog.get("schemaVersion") != SUPPORTED_SCHEMA_VERSION:
         err(f"schemaVersion phải = {SUPPORTED_SCHEMA_VERSION}, đang là {catalog.get('schemaVersion')!r}")
@@ -230,10 +261,13 @@ def main():
             kind = None
         require_str(app, "name", path)
         require_str(app, "summary", path)
+        for key in ("description", "featureHint", "rollbackNote"):
+            optional_str(app, key, path)
         if "descriptionUrl" in app:
-            url = app.get("descriptionUrl")
-            if not isinstance(url, str) or not url.startswith("https://"):
-                err(f"{path}.descriptionUrl: phải là URL https")
+            err(f"{path}.descriptionUrl: đã bỏ ở schema v2 — dùng description (HU không có browser)")
+        icon = require_str(app, "icon", path, pattern=ICON_URL_RE) if "icon" in app else None
+        if icon:
+            icon_urls.append((icon, f"{path}.icon"))
 
         factory_version_code = None
         if kind == "patch":
@@ -257,9 +291,9 @@ def main():
             if artifact:
                 artifacts.append((*artifact, f"{path}.releases[{r_index}].apk"))
 
-    check_urls_online(artifacts)
+    check_urls_online(artifacts, icon_urls)
 
-    print(f"Catalog: {len(seen_packages)} app, {len(artifacts)} artifact APK")
+    print(f"Catalog: {len(seen_packages)} app, {len(artifacts)} artifact APK, {len(icon_urls)} icon")
     for message in warnings:
         print(f"WARN: {message}")
     for message in errors:
