@@ -4,14 +4,15 @@
 #
 # Cách dùng (release mới):
 #   tools/promote.sh <package> <apk-file> \
-#       [--version-code N] [--min-coon N] [--note "..." (lặp được)] \
+#       [--version-code N (mã ngày YYYYMMDDnn, vd 2026110301)] [--min-coon N] [--note "..." (lặp được)] \
 #       [--start-service com.pkg/.Svc] [--reboot]
 #
 # Đăng ký / thay artifact factory (kèm base mới):
 #   tools/promote.sh --factory <package> <apk-file> \
 #       --version-code N [--system-app-path /system/app/.../X.apk]
 #
-# Quy ước versionCode bản vá: factory + 1.000.000 + n.
+# Quy ước versionCode bản vá: mã hóa ngày phát hành YYYYMMDDnn (nn = thứ tự
+# release trong ngày) — luôn lớn hơn versionCode 8 chữ kiểu Geely của factory.
 # Tag release = market-<ngày>. Nếu tag đã có trong hôm nay, upload asset vào tag đó.
 set -euo pipefail
 
@@ -143,7 +144,7 @@ with open(catalog_path, "w", encoding="utf-8") as fh:
 print(f"Đã cập nhật factory (versionCode {factory['versionCode']}) trong {pkg}")
 PYEOF
 else
-  [ -n "$VERSION_CODE" ] || { echo "Cần --version-code N cho release" >&2; exit 1; }
+  [ -n "$VERSION_CODE" ] || { echo "Cần --version-code N cho release (khuyến nghị mã ngày YYYYMMDDnn, vd 2026110301)" >&2; exit 1; }
   python3 - "$CATALOG" "$PKG" "$VERSION_CODE" "$URL" "$SHA" "$SIZE" \
       "${MIN_COON:-1}" "$POST_INSTALL" "${NOTES[@]-}" <<'PYEOF'
 import datetime, json, sys

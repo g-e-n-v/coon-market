@@ -78,8 +78,11 @@ re-check. "Gỡ cập nhật" = gỡ update, về bản đang nằm trong `/syst
 - **`name` của app patch = tên gốc của app trên HU** (application label trong
   AndroidManifest, vd `AutoKeyServer`): người dùng thấy Market thay đúng app
   đang chạy trên xe. Lấy qua `aapt2 dump badging <apk> | grep application:`.
-- **versionCode bản vá**: `factory + 1.000.000 + n`. Không dùng versionName —
-  định danh hiển thị của release là `releasedAt`.
+- **versionCode bản vá**: mã hóa ngày phát hành `YYYYMMDDnn` (nn = thứ tự
+  release trong ngày) — Coon hiển thị `YYYY.MM.dddd` (vd `2026.11.0301`); số
+  10 chữ luôn lớn hơn versionCode 8 chữ kiểu Geely của factory nên rollback
+  chỉ cần uninstall update. Không dùng versionName — định danh hiển thị của
+  release là `releasedAt`.
 - **sha256 là mốc nhận diện tuyệt đối** — chữ ký bản vá trùng platform
   testkey với factory nên không phân biệt được qua signature.
 - Icon: extract từ APK gốc (`aapt2 dump badging` → `application-icon-480`,

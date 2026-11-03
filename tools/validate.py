@@ -15,6 +15,7 @@ Chỉ dùng stdlib. Kiểm tra:
 Exit code 0 = PASS (cho phép WARN), khác 0 = có ERROR.
 """
 
+import datetime
 import json
 import os
 import re
@@ -47,6 +48,22 @@ def err(msg):
 
 def warn(msg):
     warnings.append(msg)
+
+
+def decode_date_version_code(vc):
+    """Decode versionCode mã ngày YYYYMMDDnn → 'YYYY.MM.dddd', None nếu không decode được."""
+    sequence = vc % 100
+    if sequence < 1:
+        return None
+    date = vc // 100
+    if date < 20260101:
+        return None
+    year, month, day = date // 10000, date // 100 % 100, date % 100
+    try:
+        datetime.date(year, month, day)
+    except ValueError:
+        return None
+    return f"{year:04d}.{month:02d}.{day:02d}{sequence:02d}"
 
 
 def require_str(obj, key, path, pattern=None, label=None):
@@ -110,7 +127,7 @@ def check_post_install(actions, path):
                 warn(f"{p}: start-service {target} — cần verify trên xe rằng service sống lại sau install")
 
 
-def check_release(release, path, seen_version_codes, factory_version_code):
+def check_release(release, path, seen_version_codes, factory_version_code, app_type=None):
     if not isinstance(release, dict):
         err(f"{path}: phải là object")
         return
@@ -131,7 +148,12 @@ def check_release(release, path, seen_version_codes, factory_version_code):
         if factory_version_code is not None and vc == factory_version_code:
             warn(
                 f"{path}.versionCode {vc} bằng factory.versionCode — digest là mốc nhận diện; "
-                "nên bump theo quy ước factory + 1.000.000 + n"
+                "nên build bản vá mới với versionCode mã ngày YYYYMMDDnn (vd 2026.11.0301)"
+            )
+        elif app_type == "patch" and decode_date_version_code(vc) is None:
+            warn(
+                f"{path}.versionCode {vc} không theo mã ngày YYYYMMDDnn (hiển thị YYYY.MM.dddd) — "
+                "release sau nên build theo quy ước mới"
             )
     if "versionName" in release:
         err(f"{path}.versionName: đã bỏ ở schema v2 — định danh hiển thị là releasedAt")
@@ -287,7 +309,9 @@ def main():
             releases = []
         seen_version_codes = set()
         for r_index, release in enumerate(releases):
-            artifact = check_release(release, f"{path}.releases[{r_index}]", seen_version_codes, factory_version_code)
+            artifact = check_release(
+                release, f"{path}.releases[{r_index}]", seen_version_codes, factory_version_code, kind
+            )
             if artifact:
                 artifacts.append((*artifact, f"{path}.releases[{r_index}].apk"))
 

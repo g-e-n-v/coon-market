@@ -36,7 +36,7 @@ nhận diện bằng sha256 của APK đang active:
 
 | releasedAt | versionCode | sha256 | Ghi chú |
 | --- | --- | --- | --- |
-| 2026-11-03 | 27020314 (factory + 1.000.000 + 1) | `5c69bf058b697a64a48e8b690464e0acb5739c725c361362eb6f837435864712` | Release đầu tiên cài qua Coon Market (PackageInstaller, APK nằm /data/app). Nội dung smali giống bản test trên xe thật 2026-11-01 (đủ 6 cử chỉ GELLY/MODE × single/double/long), chỉ bump versionCode. |
+| 2026-11-03 | 27020314 (quy ước cũ: factory + 1.000.000 + 1; release sau dùng mã ngày `YYYYMMDDnn`) | `5c69bf058b697a64a48e8b690464e0acb5739c725c361362eb6f837435864712` | Release đầu tiên cài qua Coon Market (PackageInstaller, APK nằm /data/app). Nội dung smali giống bản test trên xe thật 2026-11-01 (đủ 6 cử chỉ GELLY/MODE × single/double/long), chỉ bump versionCode. |
 
 Lịch sử: bản test 2026-11-01 (sha256 `bf73010e…`, versionCode bằng factory) chỉ
 đã flash trực tiếp vào /system qua OTA/ADB — không nằm trong catalog.
